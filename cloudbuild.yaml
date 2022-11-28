@@ -1,0 +1,40 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'eu.gcr.io/$PROJECT_ID/pinkordersapp',
+      '.'
+    ]
+  # Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'eu.gcr.io/$PROJECT_ID/pinkordersapp']
+
+  # Deploy image to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'beta'
+      - 'run'
+      - 'deploy'
+      - 'pinkorders'
+      - '--image'
+      - 'eu.gcr.io/$PROJECT_ID/pinkordersapp'
+      - '--region'
+      - 'europe-west2'
+      - '--platform'
+      - 'managed'
+      - '--cpu'
+      - '1'
+      - '--memory'
+      - '256Mi'
+      - '--concurrency'
+      - 'default'
+      - '--min-instances'
+      - 'default'
+      - '--max-instances'
+      - '3'
+      - '--no-allow-unauthenticated'
+      - '--set-secrets'
+      - "TRELLO_API_KEY=trello_api_key:latest,TRELLO_API_SECRET=trello_api_secret:latest"
+images:
+  - eu.gcr.io/$PROJECT_ID/pinkordersapp
