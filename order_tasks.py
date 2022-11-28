@@ -1,4 +1,5 @@
 import requests
+import logging
 import json
 import tasks
 import os
@@ -38,8 +39,9 @@ def get_shop(shop_domain):
 def process_shopify_webhook(webhook_id):
     doc_ref = db.collection("shopifyWebhook").document(webhook_id)
     doc = doc_ref.get()
-
-    if doc.get("webhook_attributes.X-Shopify-Topic") == "orders/create":
+    webhook_attributes = doc.get("webhook_attributes")
+    topic = webhook_attributes['X-Shopify-Topic']
+    if topic == "orders/create":
         create_card(webhook_id=webhook_id)
 
 
@@ -47,7 +49,8 @@ def process_shopify_webhook(webhook_id):
 def create_card(webhook_id):
     doc_ref = db.collection("shopifyWebhook").document(webhook_id)
     doc = doc_ref.get()
-    shop_domain = doc.get("webhook_attributes.X-Shopify-Shop-Domain")
+    webhook_attributes = doc.get("webhook_attributes")
+    shop_domain = webhook_attributes['X-Shopify-Shop-Domain']
     trello_shop = get_shop(shop_domain=shop_domain)
 
     url = "https://api.trello.com/1/cards"
@@ -57,8 +60,9 @@ def create_card(webhook_id):
 
     query = {
         'name': helpers.card_name(doc=doc),
-        'description': helpers.card_description(doc=doc, trello_shop=trello_shop),
+        'desc': helpers.card_description(doc=doc, trello_shop=trello_shop),
         'idList': trello_shop.todo_list,
+        'pos': 'top',
         'key': os.environ['TRELLO_API_KEY'],
         'token': os.environ['TRELLO_API_SECRET']
     }
@@ -80,4 +84,33 @@ def create_card(webhook_id):
         params=query
     )
 
-    print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+    card = response.json()
+    save_card(card_id=card["id"], webhook_id=webhook_id)
+
+
+@tasks.task(queue="trello")
+def save_card(card_id, webhook_id):
+    order = db.collection("shopifyWebhook").document(webhook_id).get()
+    order_number = order.get("order_number")
+    db.collection("trelloCard").document(order_number).create({
+        "card_id": card_id,
+        "order_number": order_number,
+        "order_id": order.get("id")
+    })
+
+    url = f"https://api.trello.com/1/cards/{card_id}/checklists"
+
+    query = {
+        'name': "Items",
+        'pos': 'top',
+        'key': os.environ['TRELLO_API_KEY'],
+        'token': os.environ['TRELLO_API_SECRET']
+    }
+
+    response = requests.request(
+        "POST",
+        url,
+        params=query
+    )
+
+    logging.info(response.text)

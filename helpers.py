@@ -20,33 +20,42 @@ def _description_address(doc):
     if not address:
         return ""
 
-    return f"""Address
-    ---
-    
-    {address}
-    """
+    return f"Address---\n{address}"
 
 
 def _description_order_link(doc, trello_shop):
     order_id = doc.get("id")
     order_number = doc.get("name")
-    return f"[{order_number}] (https://{trello_shop.domain}/admin/orders/{order_id})"
+    return f"[{order_number}](https://{trello_shop.domain}/admin/orders/{order_id})"
+
+
+def _line_item_properties(line_item):
+    return {prop['name']: prop['value'] for prop in line_item['properties']}
 
 
 def _description_items(doc):
     items = []
     for item in doc.get("line_items"):
+        properties = _line_item_properties(line_item=item)
+        timeslot = properties.get("timeslot")
+        date = properties.get("date")
+        if timeslot and date:
+            dt = f"{timeslot}, {date}"
+        elif timeslot:
+            dt = f"{timeslot}"
+        elif date:
+            dt = f"{date}"
+        else:
+            dt = ""
+
+        name = item['name']
         items.append(
-            f"{item.name}"
+            f"{name} {dt}"
         )
 
     items = "\n".join(items)
 
-    return f"""Items
-        ---
-
-        {items}
-        """
+    return f"Items\n---{items}"
 
 
 def card_description(doc, trello_shop):
@@ -54,15 +63,14 @@ def card_description(doc, trello_shop):
     address = _description_address(doc=doc)
     items = _description_items(doc=doc)
 
-    return f"""
-        {order_link}
-        {items}
-        {address}
+    return f"""{order_link}
+    {items}
+    {address}
     """
 
 
 def card_name(doc):
-    order_number = ""
+    order_number = doc.get("name")
     contact_email = doc.get("contact_email")
     phone = doc.get("phone")
     if not phone:
