@@ -23,6 +23,13 @@ def _description_order_link(doc, trello_shop):
     return f"Shopify order [{order_number}](https://{trello_shop.domain}/admin/orders/{order_id})"
 
 
+def _description_address(doc):
+    address1 = doc.get("address1")
+    city = doc.get("city")
+    zip_code = doc.get("zip")
+    return ", ".join([address1, city, zip_code])
+
+
 def _description_notes(doc):
     note = doc.get("note")
     if not note:
@@ -33,8 +40,9 @@ def _description_notes(doc):
 
 def card_description(doc, trello_shop):
     order_link = _description_order_link(doc=doc, trello_shop=trello_shop)
+    address = _description_address(doc=doc)
     notes = _description_notes(doc=doc)
-    return f"{order_link}\n{notes}"
+    return f"{order_link}\n{address}\n{notes}"
 
 
 def card_name(doc):
@@ -43,8 +51,8 @@ def card_name(doc):
     phone = doc.get("phone")
     if not phone:
         phone = ""
-    billing_name = doc.get("billing_address.name")
     shipping_name = doc.get("shipping_address.name")
+    billing_name = doc.get("billing_address.name")
     name = shipping_name if shipping_name == billing_name else f"{shipping_name} ({billing_name})"
 
     return f"{order_number} {name} {contact_email} {phone}"
