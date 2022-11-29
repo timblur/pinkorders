@@ -45,7 +45,7 @@ def datetime_from_properties(line_item):
     if not date:
         return None
 
-    datetime.datetime.strptime(f'{date}_{timeslot}', "%Y-%m-%d_%H:%M")
+    return datetime.datetime.strptime(f'{date}_{timeslot}', "%Y-%m-%d_%H:%M").replace(tzinfo=datetime.timezone.utc)
 
 
 def _description_items(doc):
