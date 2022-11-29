@@ -1,3 +1,4 @@
+import datetime
 
 
 def _address_line(doc, attr):
@@ -31,14 +32,24 @@ def _description_order_link(doc, trello_shop):
     return f"###Shopify order\n[{order_number}](https://{trello_shop.domain}/admin/orders/{order_id})"
 
 
-def _line_item_properties(line_item):
+def line_item_properties(line_item):
     return {prop['name']: prop['value'] for prop in line_item['properties']}
+
+
+def datetime_from_properties(line_item):
+    properties = line_item_properties(line_item=line_item)
+    timeslot = properties.get("timeslot", "09:00")
+    date = properties.get("date")
+    if not date:
+        return None
+
+    datetime.datetime.strptime(f'{date}_{timeslot}', "%Y-%m-%d_%H:%M")
 
 
 def _description_items(doc):
     items = []
     for item in doc.get("line_items"):
-        properties = _line_item_properties(line_item=item)
+        properties = line_item_properties(line_item=item)
         timeslot = properties.get("timeslot")
         date = properties.get("date")
         if timeslot and date:

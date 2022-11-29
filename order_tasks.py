@@ -92,7 +92,7 @@ def create_card(webhook_id):
 def save_card(card_id, webhook_id):
     order = db.collection("shopifyWebhook").document(webhook_id).get()
     order_number = order.get("order_number")
-    db.collection("trelloCard").document(str(order_number)).create({
+    db.collection("trelloCard").document(str(order_number)).set({
         "card_id": card_id,
         "order_number": order_number,
         "order_id": order.get("id")
@@ -113,4 +113,31 @@ def save_card(card_id, webhook_id):
         params=query
     )
 
-    logging.info(response.text)
+    checklist = response.json()
+    line_items = order.get("line_items")
+    add_checklist_items(checklist_id=checklist["id"], line_items=line_items)
+
+
+def add_checklist_items(checklist_id, line_items):
+
+    for item in line_items:
+        url = f"https://api.trello.com/1/checklists/{checklist_id}/checkItems"
+
+        query = {
+            'name': f'{item["name"]}',
+            'pos': 'bottom',
+            'key': os.environ['TRELLO_API_KEY'],
+            'token': os.environ['TRELLO_API_SECRET']
+        }
+
+        due = helpers.datetime_from_properties(line_item=item)
+        if due:
+            query['due'] = due.isoformat().replace("+00:00", "Z")
+
+        response = requests.request(
+            "POST",
+            url,
+            params=query
+        )
+
+        logging.info(response.json())
