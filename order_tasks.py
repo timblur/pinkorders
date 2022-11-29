@@ -77,6 +77,13 @@ def create_card(webhook_id):
     except KeyError:
         pass
 
+    try:
+        lat = doc.get("shipping_address.latitude")
+        long = doc.get("shipping_address.longitude")
+        query['coordinates'] = f"{lat},{long}"
+    except KeyError:
+        pass
+
     response = requests.request(
         "POST",
         url,
