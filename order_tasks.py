@@ -68,19 +68,15 @@ def create_card(webhook_id):
     }
 
     try:
+        lat = doc.get("shipping_address.latitude")
+        long = doc.get("shipping_address.longitude")
         address1 = doc.get("shipping_address.address1")
         city = doc.get("shipping_address.city")
         zip_code = doc.get("shipping_address.zip")
         country_code = doc.get("shipping_address.country_code")
+        query['coordinates'] = f"{lat},{long}"
         query['locationName'] = address1
         query['address'] = f"{address1}, {city}, {zip_code}, {country_code}"
-    except KeyError:
-        pass
-
-    try:
-        lat = doc.get("shipping_address.latitude")
-        long = doc.get("shipping_address.longitude")
-        query['coordinates'] = f"{lat},{long}"
     except KeyError:
         pass
 

@@ -1,32 +1,6 @@
 import datetime
 
 
-def _address_line(doc, attr):
-    try:
-        value = doc.get(f"shipping_address.{attr}")
-    except KeyError:
-        value = ""
-    if value:
-        return f"{value}\n"
-    return ""
-
-
-def _description_address(doc):
-    name = _address_line(doc=doc, attr="name")
-    address1 = _address_line(doc=doc, attr="address1")
-    address2 = _address_line(doc=doc, attr="address2")
-    city = _address_line(doc=doc, attr="city")
-    zip_code = _address_line(doc=doc, attr="zip")
-
-    return f"{name}{address1}{address2}{city}{zip_code}"
-
-
-def _description_order_link(doc, trello_shop):
-    order_id = doc.get("id")
-    order_number = doc.get("name")
-    return f"Shopify order [{order_number}](https://{trello_shop.domain}/admin/orders/{order_id})"
-
-
 def line_item_properties(line_item):
     return {prop['name']: prop['value'] for prop in line_item['properties']}
 
@@ -43,11 +17,24 @@ def datetime_from_properties(line_item):
     return datetime.datetime.strptime(f'{date}_{timeslot}', "%Y-%m-%d_%H:%M").replace(tzinfo=datetime.timezone.utc)
 
 
+def _description_order_link(doc, trello_shop):
+    order_id = doc.get("id")
+    order_number = doc.get("name")
+    return f"Shopify order [{order_number}](https://{trello_shop.domain}/admin/orders/{order_id})"
+
+
+def _description_notes(doc):
+    note = doc.get("note")
+    if not note:
+        return ""
+
+    return f"###Notes\n{note}"
+
+
 def card_description(doc, trello_shop):
     order_link = _description_order_link(doc=doc, trello_shop=trello_shop)
-    address = _description_address(doc=doc)
-
-    return f"{order_link}\n{address}"
+    notes = _description_notes(doc=doc)
+    return f"{order_link}\n{notes}"
 
 
 def card_name(doc):
