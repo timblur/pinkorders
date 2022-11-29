@@ -38,7 +38,9 @@ def line_item_properties(line_item):
 
 def datetime_from_properties(line_item):
     properties = line_item_properties(line_item=line_item)
-    timeslot = properties.get("timeslot", "09:00")
+    timeslot = properties.get("timeslot")
+    if not timeslot:
+        timeslot = "09:00"
     date = properties.get("date")
     if not date:
         return None
