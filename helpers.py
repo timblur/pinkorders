@@ -4,8 +4,10 @@ def _address_line(doc, attr):
     try:
         value = doc.get(f"shipping_address.{attr}")
     except KeyError:
-        return ""
-    return f"{value}\n"
+        value = ""
+    if value:
+        return f"{value}\n"
+    return ""
 
 
 def _description_address(doc):
@@ -20,13 +22,13 @@ def _description_address(doc):
     if not address:
         return ""
 
-    return f"Address---\n{address}"
+    return f"###Address\n{address}"
 
 
 def _description_order_link(doc, trello_shop):
     order_id = doc.get("id")
     order_number = doc.get("name")
-    return f"[{order_number}](https://{trello_shop.domain}/admin/orders/{order_id})"
+    return f"###Shopify order\n[{order_number}](https://{trello_shop.domain}/admin/orders/{order_id})"
 
 
 def _line_item_properties(line_item):
@@ -55,7 +57,7 @@ def _description_items(doc):
 
     items = "\n".join(items)
 
-    return f"Items\n---{items}"
+    return f"###Items\n{items}"
 
 
 def card_description(doc, trello_shop):
@@ -63,10 +65,7 @@ def card_description(doc, trello_shop):
     address = _description_address(doc=doc)
     items = _description_items(doc=doc)
 
-    return f"""{order_link}
-    {items}
-    {address}
-    """
+    return f"{order_link}\n{items}\n{address}"
 
 
 def card_name(doc):
