@@ -129,7 +129,7 @@ def add_checklist_items(checklist_id, webhook_id, index=0):
     url = f"https://api.trello.com/1/checklists/{checklist_id}/checkItems"
 
     quantity = item["quantity"]
-    name = {item["name"]}
+    name = item["name"]
 
     query = {
         'name': f'{quantity} {name}',
