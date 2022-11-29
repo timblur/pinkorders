@@ -92,7 +92,7 @@ def create_card(webhook_id):
 def save_card(card_id, webhook_id):
     order = db.collection("shopifyWebhook").document(webhook_id).get()
     order_number = order.get("order_number")
-    db.collection("trelloCard").document(order_number).create({
+    db.collection("trelloCard").document(str(order_number)).create({
         "card_id": card_id,
         "order_number": order_number,
         "order_id": order.get("id")
