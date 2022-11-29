@@ -48,37 +48,11 @@ def datetime_from_properties(line_item):
     return datetime.datetime.strptime(f'{date}_{timeslot}', "%Y-%m-%d_%H:%M").replace(tzinfo=datetime.timezone.utc)
 
 
-def _description_items(doc):
-    items = []
-    for item in doc.get("line_items"):
-        properties = line_item_properties(line_item=item)
-        timeslot = properties.get("timeslot")
-        date = properties.get("date")
-        if timeslot and date:
-            dt = f"{timeslot}, {date}"
-        elif timeslot:
-            dt = f"{timeslot}"
-        elif date:
-            dt = f"{date}"
-        else:
-            dt = ""
-
-        name = item['name']
-        items.append(
-            f"{name} {dt}"
-        )
-
-    items = "\n".join(items)
-
-    return f"###Items\n{items}"
-
-
 def card_description(doc, trello_shop):
     order_link = _description_order_link(doc=doc, trello_shop=trello_shop)
     address = _description_address(doc=doc)
-    items = _description_items(doc=doc)
 
-    return f"{order_link}\n{items}\n{address}"
+    return f"{order_link}\n{address}"
 
 
 def card_name(doc):
