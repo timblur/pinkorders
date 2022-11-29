@@ -18,18 +18,13 @@ def _description_address(doc):
     city = _address_line(doc=doc, attr="city")
     zip_code = _address_line(doc=doc, attr="zip")
 
-    address = f"{name}{address1}{address2}{city}{zip_code}"
-
-    if not address:
-        return ""
-
-    return f"###Address\n{address}"
+    return f"{name}{address1}{address2}{city}{zip_code}"
 
 
 def _description_order_link(doc, trello_shop):
     order_id = doc.get("id")
     order_number = doc.get("name")
-    return f"###Shopify order\n[{order_number}](https://{trello_shop.domain}/admin/orders/{order_id})"
+    return f"Shopify order [{order_number}](https://{trello_shop.domain}/admin/orders/{order_id})"
 
 
 def line_item_properties(line_item):
