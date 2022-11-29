@@ -114,30 +114,35 @@ def save_card(card_id, webhook_id):
     )
 
     checklist = response.json()
+    add_checklist_items(checklist_id=checklist["id"], webhook_id=webhook_id)
+
+
+@tasks.task(queue="trello")
+def add_checklist_items(checklist_id, webhook_id, index=0):
+    order = db.collection("shopifyWebhook").document(webhook_id).get()
     line_items = order.get("line_items")
-    add_checklist_items(checklist_id=checklist["id"], line_items=line_items)
+    item = line_items[index]
 
+    url = f"https://api.trello.com/1/checklists/{checklist_id}/checkItems"
 
-def add_checklist_items(checklist_id, line_items):
+    query = {
+        'name': f'{item["name"]}',
+        'pos': 'bottom',
+        'key': os.environ['TRELLO_API_KEY'],
+        'token': os.environ['TRELLO_API_SECRET']
+    }
 
-    for item in line_items:
-        url = f"https://api.trello.com/1/checklists/{checklist_id}/checkItems"
+    due = helpers.datetime_from_properties(line_item=item)
+    if due:
+        query['due'] = due.isoformat().replace("+00:00", "Z")
 
-        query = {
-            'name': f'{item["name"]}',
-            'pos': 'bottom',
-            'key': os.environ['TRELLO_API_KEY'],
-            'token': os.environ['TRELLO_API_SECRET']
-        }
+    response = requests.request(
+        "POST",
+        url,
+        params=query
+    )
 
-        due = helpers.datetime_from_properties(line_item=item)
-        if due:
-            query['due'] = due.isoformat().replace("+00:00", "Z")
+    logging.info(response.json())
 
-        response = requests.request(
-            "POST",
-            url,
-            params=query
-        )
-
-        logging.info(response.json())
+    if index != len(line_items) - 1:
+        add_checklist_items(checklist_id, webhook_id, index+1)
