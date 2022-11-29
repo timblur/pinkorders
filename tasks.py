@@ -41,7 +41,7 @@ def task(func=None, *, queue='main', location='europe-west2', in_seconds=None, d
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        task_url = f"https://{request.host}/{tasks_blueprint.url_prefix}/{func.__module__}/{func.__name__}"
+        task_url = f"https://{request.host}{tasks_blueprint.url_prefix}/{func.__module__}/{func.__name__}"
         logging.info(f"{task_url=}")
         if bool(os.getenv("RUN_TASKS_IMMEDIATELY", False)):
             logging.info(f"running task immediately: {task_url}")
