@@ -128,6 +128,8 @@ def add_checklist_items(checklist_id, webhook_id, index=0):
     quantity = item["quantity"]
     name = item["name"]
 
+    logging.info(name)
+
     query = {
         'name': f'{quantity} {name}',
         'pos': 'bottom',
