@@ -131,7 +131,7 @@ def add_checklist_items(checklist_id, webhook_id, index=0):
     logging.info(name)
 
     query = {
-        'name': f'{quantity} {name}',
+        'name': f'{quantity}x {name}',
         'pos': 'bottom',
         'key': os.environ['TRELLO_API_KEY'],
         'token': os.environ['TRELLO_API_SECRET']
