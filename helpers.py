@@ -24,9 +24,9 @@ def _description_order_link(doc, trello_shop):
 
 
 def _description_address(doc):
-    address1 = doc.get("address1")
-    city = doc.get("city")
-    zip_code = doc.get("zip")
+    address1 = doc.get("shipping_address.address1")
+    city = doc.get("shipping_address.city")
+    zip_code = doc.get("shipping_address.zip")
     return ", ".join([address1, city, zip_code])
 
 
