@@ -128,10 +128,16 @@ def add_checklist_items(checklist_id, webhook_id, index=0):
     quantity = item["quantity"]
     name = item["name"]
 
+    properties = helpers.line_item_properties(line_item=item)
+    delivery_type = ""
+    delivery = properties.get("delivery")
+    if delivery:
+        delivery_type = f"({delivery})"
+
     logging.info(name)
 
     query = {
-        'name': f'{quantity}x {name}',
+        'name': f'{quantity}x {name}{delivery_type}',
         'pos': 'bottom',
         'key': os.environ['TRELLO_API_KEY'],
         'token': os.environ['TRELLO_API_SECRET']
