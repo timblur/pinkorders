@@ -15,6 +15,7 @@ def datetime_from_properties(line_item):
     if not date:
         return None
 
+    timeslot = timeslot.split(" - ")[0]
     for fmt in ["%d %b %Y_%H:%M", "%d %b %Y_%H%p", "%d %b %Y_%H:%M%p", "%Y-%m-%d_%H:%M"]:
         try:
             dt = datetime.datetime.strptime(f'{date}_{timeslot}', fmt)
@@ -24,7 +25,6 @@ def datetime_from_properties(line_item):
             return dt.replace(tzinfo=datetime.timezone.utc)
 
     logging.error(f"Unable to phase due date: {date}_{timeslot}")
-
     return None
 
 
