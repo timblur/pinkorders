@@ -15,7 +15,7 @@ def datetime_from_properties(line_item):
     if not date:
         return None
 
-    for fmt in ["%d %b %Y_%H:%M", "%d %b %Y_%H%p", "%d %b %Y_%H:%M%p" "%Y-%m-%d_%H:%M"]:
+    for fmt in ["%d %b %Y_%H:%M", "%d %b %Y_%H%p", "%d %b %Y_%H:%M%p", "%Y-%m-%d_%H:%M"]:
         try:
             dt = datetime.datetime.strptime(f'{date}_{timeslot}', fmt)
         except ValueError:
