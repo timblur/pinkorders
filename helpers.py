@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 
 def line_item_properties(line_item):
@@ -14,7 +15,13 @@ def datetime_from_properties(line_item):
     if not date:
         return None
 
-    return datetime.datetime.strptime(f'{date}_{timeslot}', "%Y-%m-%d_%H:%M").replace(tzinfo=datetime.timezone.utc)
+    try:
+        dt = datetime.datetime.strptime(f'{date}_{timeslot}', "%d %b %Y_%H:%M")  # old one: "%Y-%m-%d_%H:%M"
+    except ValueError:
+        logging.exception("Couldn't phase due date.")
+        return None
+    else:
+        return dt.replace(tzinfo=datetime.timezone.utc)
 
 
 def _description_order_link(doc, trello_shop):
