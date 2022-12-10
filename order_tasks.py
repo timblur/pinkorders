@@ -22,7 +22,7 @@ def get_shop(shop_domain):
     shops = [
         TrelloShop(
             todo_list="63812e1e7a005401ad39232c",
-            domain="pink-test-store.myshopify.com",
+            domain="pinkcakeshop.myshopify.com",
         ),
         TrelloShop(
             todo_list="638135460ac202010129917d",
