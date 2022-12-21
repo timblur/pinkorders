@@ -1,6 +1,4 @@
 import requests
-import logging
-import json
 import tasks
 import os
 import helpers
@@ -39,18 +37,21 @@ def get_shop(shop_domain):
 @tasks.task(queue="shopify-webhook")
 def process_shopify_webhook(webhook_id):
     doc_ref = db.collection("shopifyWebhook").document(webhook_id)
-    doc = doc_ref.get()
-    webhook_attributes = doc.get("webhook_attributes")
+    order = doc_ref.get()
+    webhook_attributes = order.get("webhook_attributes")
     topic = webhook_attributes['X-Shopify-Topic']
     if topic == "orders/create":
         create_card(webhook_id=webhook_id)
 
 
 @tasks.task(queue="trello")
-def create_card(webhook_id):
+def create_card(webhook_id, index=0):
     doc_ref = db.collection("shopifyWebhook").document(webhook_id)
-    doc = doc_ref.get()
-    webhook_attributes = doc.get("webhook_attributes")
+    order = doc_ref.get()
+    line_items = order.get("line_items")
+    total_line_items = len(line_items)
+    item = line_items[index]
+    webhook_attributes = order.get("webhook_attributes")
     shop_domain = webhook_attributes['X-Shopify-Shop-Domain']
     trello_shop = get_shop(shop_domain=shop_domain)
 
@@ -60,22 +61,26 @@ def create_card(webhook_id):
     }
 
     query = {
-        'name': helpers.card_name(doc=doc),
-        'desc': helpers.card_description(doc=doc, trello_shop=trello_shop),
+        'name': helpers.card_name(order=order, index=index),
+        'desc': helpers.card_description(order=order, trello_shop=trello_shop),
         'idList': trello_shop.todo_list,
         'pos': 'top',
         'key': os.environ['TRELLO_API_KEY'],
         'token': os.environ['TRELLO_API_SECRET']
     }
 
+    due = helpers.datetime_from_properties(line_item=item)
+    if due:
+        query['due'] = due.isoformat().replace("+00:00", "Z")
+
     try:
-        # lat = doc.get("shipping_address.latitude")
-        # long = doc.get("shipping_address.longitude")
-        address1 = doc.get("shipping_address.address1")
-        city = doc.get("shipping_address.city")
-        zip_code = doc.get("shipping_address.zip")
-        country_code = doc.get("shipping_address.country_code")
-        # query['coordinates'] = f"{lat},{long}"
+        lat = order.get("shipping_address.latitude")
+        long = order.get("shipping_address.longitude")
+        address1 = order.get("shipping_address.address1")
+        city = order.get("shipping_address.city")
+        zip_code = order.get("shipping_address.zip")
+        country_code = order.get("shipping_address.country_code")
+        query['coordinates'] = f"{lat},{long}"
         query['locationName'] = address1
         query['address'] = f"{address1}, {city}, {zip_code}, {country_code}"
     except KeyError:
@@ -91,6 +96,9 @@ def create_card(webhook_id):
     card = response.json()
     save_card(card_id=card["id"], webhook_id=webhook_id)
 
+    if index != total_line_items - 1:
+        create_card(webhook_id, index+1)
+
 
 @tasks.task(queue="trello")
 def save_card(card_id, webhook_id):
@@ -101,63 +109,3 @@ def save_card(card_id, webhook_id):
         "order_number": order_number,
         "order_id": order.get("id")
     })
-
-    url = f"https://api.trello.com/1/cards/{card_id}/checklists"
-
-    query = {
-        'name': "Items",
-        'pos': 'top',
-        'key': os.environ['TRELLO_API_KEY'],
-        'token': os.environ['TRELLO_API_SECRET']
-    }
-
-    response = requests.request(
-        "POST",
-        url,
-        params=query
-    )
-
-    checklist = response.json()
-    add_checklist_items(checklist_id=checklist["id"], webhook_id=webhook_id)
-
-
-@tasks.task(queue="trello")
-def add_checklist_items(checklist_id, webhook_id, index=0):
-    order = db.collection("shopifyWebhook").document(webhook_id).get()
-    line_items = order.get("line_items")
-    item = line_items[index]
-
-    url = f"https://api.trello.com/1/checklists/{checklist_id}/checkItems"
-
-    quantity = item["quantity"]
-    name = item["name"]
-
-    properties = helpers.line_item_properties(line_item=item)
-    delivery_type = ""
-    delivery = properties.get("delivery")
-    if delivery:
-        delivery_type = f"({delivery})"
-
-    logging.info(name)
-
-    query = {
-        'name': f'{quantity} x {name} {delivery_type}',
-        'pos': 'bottom',
-        'key': os.environ['TRELLO_API_KEY'],
-        'token': os.environ['TRELLO_API_SECRET']
-    }
-
-    due = helpers.datetime_from_properties(line_item=item)
-    if due:
-        query['due'] = due.isoformat().replace("+00:00", "Z")
-
-    response = requests.request(
-        "POST",
-        url,
-        params=query
-    )
-
-    logging.info(response.json())
-
-    if index != len(line_items) - 1:
-        add_checklist_items(checklist_id, webhook_id, index+1)
