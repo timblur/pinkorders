@@ -92,7 +92,7 @@ def create_card(webhook_id, index=0):
         headers=headers,
         params=query
     )
-
+    response.raise_for_status()
     card = response.json()
     save_card(card_id=card["id"], webhook_id=webhook_id)
 
