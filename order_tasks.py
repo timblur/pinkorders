@@ -74,18 +74,17 @@ def create_card(webhook_id, index=0):
     if due:
         query['due'] = due.isoformat().replace("+00:00", "Z")
 
-    try:
-        lat = order.get("shipping_address.latitude")
-        long = order.get("shipping_address.longitude")
-        address1 = order.get("shipping_address.address1")
-        city = order.get("shipping_address.city")
-        zip_code = order.get("shipping_address.zip")
-        country_code = order.get("shipping_address.country_code")
+    lat = order.get("shipping_address.latitude")
+    long = order.get("shipping_address.longitude")
+    if lat and long:
         query['coordinates'] = f"{lat},{long}"
-        query['locationName'] = address1
-        query['address'] = f"{address1}, {city}, {zip_code}, {country_code}"
-    except KeyError:
-        pass
+
+    address1 = order.get("shipping_address.address1")
+    city = order.get("shipping_address.city")
+    zip_code = order.get("shipping_address.zip")
+    country_code = order.get("shipping_address.country_code")
+    query['locationName'] = address1
+    query['address'] = f"{address1}, {city}, {zip_code}, {country_code}"
 
     response = requests.request(
         "POST",
@@ -93,10 +92,8 @@ def create_card(webhook_id, index=0):
         headers=headers,
         params=query
     )
-    logging.info(response.text)
     logging.info(response.json())
     response.raise_for_status()
-
     card = response.json()
     save_card(card_id=card["id"], webhook_id=webhook_id)
 
