@@ -2,6 +2,7 @@ import requests
 import tasks
 import os
 import helpers
+import logging
 from google.cloud import firestore
 from dataclasses import dataclass
 
@@ -92,7 +93,10 @@ def create_card(webhook_id, index=0):
         headers=headers,
         params=query
     )
+    logging.info(response.text)
+    logging.info(response.json())
     response.raise_for_status()
+
     card = response.json()
     save_card(card_id=card["id"], webhook_id=webhook_id)
 
