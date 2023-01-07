@@ -82,7 +82,11 @@ def card_name(order, index):
     phone = order.get("phone")
     if not phone:
         phone = ""
-    shipping_name = order.get("shipping_address.name")
+
+    try:
+        shipping_name = order.get("shipping_address.name")
+    except KeyError:
+        shipping_name = order.get("billing_address.name")
     billing_name = order.get("billing_address.name")
     name = shipping_name if shipping_name == billing_name else f"{shipping_name} ({billing_name})"
 
