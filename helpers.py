@@ -35,10 +35,13 @@ def _description_order_link(order, trello_shop):
 
 
 def _description_address(order):
-    address1 = order.get("shipping_address.address1")
-    city = order.get("shipping_address.city")
-    zip_code = order.get("shipping_address.zip")
-    return ", ".join([address1, city, zip_code])
+    try:
+        address1 = order.get("shipping_address.address1")
+        city = order.get("shipping_address.city")
+        zip_code = order.get("shipping_address.zip")
+        return ", ".join([address1, city, zip_code])
+    except KeyError:
+        return ""
 
 
 def _description_notes(order):
