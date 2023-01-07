@@ -74,17 +74,7 @@ def create_card(webhook_id, index=0):
     if due:
         query['due'] = due.isoformat().replace("+00:00", "Z")
 
-    lat = order.get("shipping_address.latitude")
-    long = order.get("shipping_address.longitude")
-    if lat and long:
-        query['coordinates'] = f"{lat},{long}"
-
-    address1 = order.get("shipping_address.address1")
-    city = order.get("shipping_address.city")
-    zip_code = order.get("shipping_address.zip")
-    country_code = order.get("shipping_address.country_code")
-    query['locationName'] = address1
-    query['address'] = f"{address1}, {city}, {zip_code}, {country_code}"
+    helpers.location_details(query=query, order=order)
 
     response = requests.request(
         "POST",

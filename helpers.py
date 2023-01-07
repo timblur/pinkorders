@@ -56,6 +56,23 @@ def card_description(order, trello_shop):
     return f"{order_link}\n{address}\n{notes}"
 
 
+def location_details(query, order):
+    try:
+        lat = order.get("shipping_address.latitude")
+        long = order.get("shipping_address.longitude")
+        if lat and long:
+            query['coordinates'] = f"{lat},{long}"
+
+        address1 = order.get("shipping_address.address1")
+        city = order.get("shipping_address.city")
+        zip_code = order.get("shipping_address.zip")
+        country_code = order.get("shipping_address.country_code")
+        query['locationName'] = address1
+        query['address'] = f"{address1}, {city}, {zip_code}, {country_code}"
+    except KeyError:
+        pass
+
+
 def card_name(order, index):
     line_items = order.get("line_items")
     item = line_items[index]
